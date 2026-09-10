@@ -4,6 +4,8 @@
 #include "framework.h"
 #include "W02Win32.h"
 
+#include "model.h"
+
 #define MAX_LOADSTRING 100
 
 // 전역 변수:
@@ -11,7 +13,7 @@ HINSTANCE hInst;                                // 현재 인스턴스입니다.
 WCHAR szTitle[MAX_LOADSTRING];                  // 제목 표시줄 텍스트입니다.
 WCHAR szWindowClass[MAX_LOADSTRING];            // 기본 창 클래스 이름입니다.
 
-static int x = -100, y = 100;
+//static int x = -100, y = 100;
 
 // 이 코드 모듈에 포함된 함수의 선언을 전달합니다:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -146,38 +148,43 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     break;
     case WM_LBUTTONDOWN:
     {
-        //MessageBox(hWnd, L"왼쪽 버튼 클릭", L"마우스", MB_OK);
+        POINT p;
+        p.x = LOWORD(lParam);
+        p.y = HIWORD(lParam);
 
-        //int x, y;
-        x = LOWORD(lParam);
-        y = HIWORD(lParam);
+        AddPoint(p);
 
         InvalidateRect(hWnd, NULL, TRUE);
-
-        //HDC hdc = GetDC(hWnd);
-        //HBRUSH yellow, oldBrush;
-        //yellow = CreateSolidBrush(RGB(255, 255, 0));
-        //oldBrush = (HBRUSH)SelectObject(hdc, yellow);
-
-        //HPEN blue, oldPen;
-        //blue = CreatePen(PS_SOLID, 2, RGB(0, 0, 255));
-        //oldPen = (HPEN)SelectObject(hdc, blue);
-
-        //Ellipse(hdc, x - 30, y - 30, x + 30, y + 30);
-
-        //SelectObject(hdc, oldPen);
-        //DeleteObject(blue);
-
-        //SelectObject(hdc, oldBrush);
-        //DeleteObject(yellow);
-        //ReleaseDC(hWnd, hdc);
     }
     break;
+
+    case WM_RBUTTONDOWN:
+    {
+        DeleteLastPoint();
+        InvalidateRect(hWnd, NULL, TRUE);
+
+	}
+
+    case WM_KEYDOWN:
+    {
+        if (wParam == VK_BACK)
+        {
+            // 저장된 모든 점 삭제
+            while (GetNumPoints() > 0)
+            {
+                DeleteLastPoint();
+            }
+            InvalidateRect(hWnd, NULL, TRUE); // 화면 갱신
+        }
+    }
+    break;
+    
     case WM_PAINT:
     {
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(hWnd, &ps);
         // TODO: 여기에 그리기 코드를 추가합니다...
+		
 
         HBRUSH yellow, oldBrush;
         yellow = CreateSolidBrush(RGB(255, 255, 0));
@@ -187,7 +194,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         blue = CreatePen(PS_SOLID, 2, RGB(0, 0, 255));
         oldPen = (HPEN)SelectObject(hdc, blue);
 
-        Ellipse(hdc, x - 30, y - 30, x + 30, y + 30);
+        int n = GetNumPoints();
+        for (int i = 0; i < n; i++) {
+            POINT p = GetPoint(i);
+            Ellipse(hdc, p.x - 30, p.y - 30, p.x + 30, p.y + 30);
+            
+            
+        }
 
         SelectObject(hdc, oldPen);
         DeleteObject(blue);
